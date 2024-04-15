@@ -55,3 +55,10 @@ This Lambda function performs sentiment analysis on text data using asynchronous
 ## Limitations
 - Ensure the environment variable API_KEY is set correctly.
 - Adjust ```CHUNK_SIZE``` and ```DELAY_BETWEEN_CHUNKS``` as needed based on the API's capacity and rate limits.
+
+### Learn more
+- If you have any questions
+- dont call me
+- dont text me
+- dont contact me
+- Cause I cant help you only god can
