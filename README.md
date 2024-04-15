@@ -1,6 +1,3 @@
-# lambda_multi_parallel_gpt_calling
-
-
 # Sentiment Analysis Lambda Function
 
 This Lambda function performs sentiment analysis on text data using asynchronous calls to an API. It is designed to process and analyze batches of sentences, extracting sentiment scores, themes, and keywords.
