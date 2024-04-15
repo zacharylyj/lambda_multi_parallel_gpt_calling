@@ -40,7 +40,7 @@ This Lambda function performs sentiment analysis on text data using asynchronous
 
 - Debugging can be enabled by setting the `DEBUG` variable. This will print additional output for troubleshooting.
 
-## Example Event Format
+## Example Payload
 
 ```json
 {
