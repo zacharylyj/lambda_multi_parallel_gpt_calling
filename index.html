@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentiment Analysis</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.4/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Currently only God and I know the code. 2/4/2024 */
+
+
+        /* only God knows 4/4/2024 */
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #1e1e1e;
+        }
+
+        .wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .outer-container {
+            width: 99vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .inner-container {
+            padding: 20px;
+            background-color: #2e2e2e;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .tableprop {
+            width: 70vw;
+            height: 60vh;
+            overflow-y: scroll;
+        }
+
+        .downloadcontainer {
+            display: flex;
+            align-content: center;
+            margin-top: 10px;
+        }
+
+        tbody {
+            overflow-y: scroll;
+        }
+
+        h2,
+        h1 {
+            text-align: center;
+            color: #fff;
+        }
+
+        .cleardb-button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px
+        }
+
+        /* Style the download button div */
+        .download-button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        /* Change button color on hover */
+        .download-button:hover {
+            background-color: #0056b3;
+        }
+
+        .input-container {
+            margin-bottom: 20px;
+        }
+
+        input[type="file"],
+        input[type="text"],
+        button {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            border: 1px solid #444;
+            border-radius: 5px;
+            outline: none;
+            background-color: #333;
+            color: #fff;
+        }
+
+        button {
+            background-color: #007bff;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead th,
+        tbody td {
+            padding: 5px;
+            border: 1px solid #444;
+            background-color: #333;
+            color: #fff;
+            max-width: 100px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            position: relative;
+        }
+
+        thead th {
+            text-align: left;
+        }
+
+
+        tbody tr:nth-child(even) {
+            background-color: #2e2e2e;
+        }
+
+        .other-header,
+        .total-tokens-header,
+        .cost-header,
+        .raw-header {
+            display: none;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background-color: #555;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background-color: #888;
+        }
+
+        ::-webkit-scrollbar-track {
+            background-color: #333;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-track:hover {
+            background-color: #444;
+        }
+
+
+        /* Switch */
+
+        .switch-position {
+            display: flex;
+            justify-content: right;
+            padding: 0.5vw 0px;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            display: inline-block;
+            width: 3vw;
+            height: 1.5vw;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            -webkit-transition: .4s;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 1.2vw;
+            width: 1.2vw;
+            top: 0.15vw;
+            left: 0.3vw;
+            background-color: white;
+            -webkit-transition: .4s;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked+.toggle-slider {
+            background-color: #2196F3;
+        }
+
+        input:focus+.toggle-slider {
+            box-shadow: 0 0 1px #2196F3;
+        }
+
+        input:checked+.toggle-slider:before {
+            -webkit-transform: translateX(1.2vw);
+            -ms-transform: translateX(1.2vw);
+            transform: translateX(1.2vw);
+        }
+
+
+        /* Hide original checkbox */
+        .toggle-switch input {
+            display: none;
+        }
+
+        .popup {
+            position: absolute;
+            background-color: #fff;
+            border: 1px solid #fff;
+            /* Initial border color */
+            padding: 10px;
+            font-size: 12px;
+            /* Smaller text size */
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            /* Ensure the popup appears on top of other elements */
+        }
+
+        .invisible-div {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            /* Ensure the invisible div is above the text */
+            opacity: 0;
+            /* Make the invisible div transparent */
+            cursor: pointer;
+            /* Change cursor to pointer to indicate clickable */
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrapper">
+        <div class="outer-container">
+            <div class="inner-container form">
+                <form id="uploadForm" enctype="multipart/form-data">
+                    <h2>Upload File</h2>
+                    <div class="input-container">
+                        <input type="file" name="file" accept=".xlsx" required>
+                    </div>
+                    <div class="input-container">
+                        <input type="text" name="input_data" placeholder="Enter Themes">
+                    </div>
+                    <div class="input-container">
+                        <button type="button" onclick="submitForm()">Process</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <hr>
+        <div class="outer-container">
+            <div class="inner-container">
+                <h1>Sentiment Analysis Results</h1>
+                <div class="switch-position">
+                    <label class="toggle-switch">
+                        <input type="checkbox" onclick="toggleColumns()">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="tableprop">
+                    <table id="sentimentTable">
+                        <thead>
+                            <tr id="headerRow">
+                                <th>ID</th>
+                                <th>Sentence</th>
+                                <th>Score</th>
+                                <th>Theme</th>
+                                <th>Keywords</th>
+                                <th class="endpoint-url" style="display:none">Endpoint URL</th>
+                                <th class="other-header" style="display:none">Other</th>
+                                <th class="total-tokens-header" style="display:none">Total Tokens</th>
+                                <th class="cost-header" style="display:none">Cost($)</th>
+                                <th class="raw-header" style="display:none">Raw</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody"></tbody>
+                    </table>
+
+                </div>
+                <div class="downloadcontainer">
+                    <div class="download-button" id="downloadButton">Download</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="popup" class="popup" style="display: none;"></div>
+
+    <script>
+        var global_tabledata
+        function submitForm() {
+            console.log("submitForm")
+            var fileInput = document.querySelector('input[type="file"]');
+            var formData = fileInput.files[0];
+            if (formData) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const data = e.target.result;
+                    console.log("data")
+                    console.log(data)
+                    const workbook = XLSX.read(data, { type: 'binary' });
+                    console.log("workbook")
+                    console.log(workbook)
+                    const firstSheetName = workbook.SheetNames[0];
+                    console.log("firstSheetName")
+                    console.log(firstSheetName)
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    console.log("worksheet")
+                    console.log(worksheet)
+                    const json = XLSX.utils.sheet_to_json(worksheet);
+                    console.log("json")
+                    console.log(json)
+                    const extractedData = json.map(obj => obj.Data);
+                    console.log("extractedData")
+                    console.log(extractedData)
+                    sendToLambda(extractedData);
+                };
+                reader.readAsBinaryString(formData);
+            } else {
+                document.getElementById('result').textContent = 'No file selected!';
+            }
+        }
+
+        async function sendToLambda(data) {
+            console.log("sendToLambda")
+            var textInput = document.querySelector('input[name="input_data"]').value;
+            console.log(textInput)
+            var bodydata = JSON.stringify({ "userinput": textInput, "data": data })
+            console.log(bodydata)
+            try {
+                const response = await fetch('https://eygtbcoxmmx7rrrfhxet5dmfci0dfxow.lambda-url.ap-southeast-1.on.aws/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    "body": bodydata
+                });
+                const responseData = await response.json();
+                global_tabledata = responseData.data;
+            } catch (error) {
+                document.getElementById('result').textContent = 'Error: ' + error.message;
+            }
+            refreshTable()
+        }
+        var showColumn = false;
+
+        function toggleColumns() {
+            console.log("toggleColumns")
+            showColumn = !showColumn; // Toggle the state of the showColumn variable
+
+            // Get all table headers for the additional columns
+            var endpointurl = document.querySelector('.endpoint-url');
+            var otherHeader = document.querySelector('.other-header');
+            var totalTokensHeader = document.querySelector('.total-tokens-header');
+            var costHeader = document.querySelector('.cost-header');
+            var rawHeader = document.querySelector('.raw-header');
+
+            // Toggle the display property based on the showColumn variable
+            endpointurl.style.display = showColumn ? 'table-cell' : 'none';
+            otherHeader.style.display = showColumn ? 'table-cell' : 'none';
+            totalTokensHeader.style.display = showColumn ? 'table-cell' : 'none';
+            costHeader.style.display = showColumn ? 'table-cell' : 'none';
+            rawHeader.style.display = showColumn ? 'table-cell' : 'none';
+
+            // Refresh the table data after toggling column visibility
+            refreshTable();
+        }
+
+        function downloadExcel() {
+            const header = ['Sentence', 'Endpoint URL', 'Score', 'Theme', 'Keywords', 'Other', 'Total Tokens', 'Cost($)', 'Raw']; // Define table headers
+            const rows = [header]; // Initialize rows array with header
+
+            // Add data rows to the rows array
+            global_tabledata.forEach(row => {
+                rows.push(row);
+            });
+
+            // Create a new Excel workbook
+            const workbook = XLSX.utils.book_new();
+            const worksheet = XLSX.utils.aoa_to_sheet(rows); // Convert array of arrays to worksheet
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'Sentiment Analysis'); // Add worksheet to workbook
+
+            // Generate Excel file
+            const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+
+            // Convert buffer to Blob
+            const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
+
+            // Create download link
+            const downloadLink = document.createElement('a');
+            downloadLink.href = URL.createObjectURL(blob);
+            downloadLink.download = 'sentiment_analysis_results.xlsx';
+
+            // Trigger download
+            downloadLink.click();
+        }
+
+        // Add click event listener to the download button div
+        document.getElementById('downloadButton').addEventListener('click', downloadExcel);
+
+        function showPopup(content, posX, posY) {
+            console.log("showPopup")
+            const popup = document.getElementById('popup');
+            popup.innerHTML = content;
+            popup.style.left = posX + 'px';
+            popup.style.top = posY + 'px';
+            popup.style.display = 'block';
+        }
+
+        // Function to hide the popup div
+        function hidePopup() {
+            console.log("hide")
+            const popup = document.getElementById('popup');
+            popup.style.display = 'none';
+        }
+
+        // Add event listeners to all table cells
+        const cells = document.querySelectorAll('td');
+        cells.forEach(cell => {
+            cell.addEventListener('click', function () {
+                // Get the content of the clicked cell
+                const content = this.textContent.trim();
+                // Get the position of the clicked cell
+                const rect = this.getBoundingClientRect();
+                const posX = rect.left + window.scrollX;
+                const posY = rect.top + window.scrollY;
+
+                // Show the popup with the cell content
+                showPopup(content, posX, posY);
+            });
+
+            cell.addEventListener('mouseout', function () {
+                // Hide the popup when mouse leaves the cell
+                hidePopup();
+            });
+        });
+        // Function to attach event listeners to table cells and their text nodes
+        function attachCellEventListeners() {
+            console.log("attachCellEventListeners")
+
+            const cells = document.querySelectorAll('td');
+            let popupTimeout; // Variable to store the timeout for hiding the popup
+
+            cells.forEach(cell => {
+                // Add event listener to the table cell
+                cell.addEventListener('click', function () {
+                    handleCellClick(cell);
+                });
+
+                // Add event listeners to the text nodes inside the table cell
+                cell.childNodes.forEach(node => {
+                    if (node.nodeType === Node.TEXT_NODE) {
+                        // Create an invisible div to capture click events on the text
+                        const invisibleDiv = document.createElement('div');
+                        invisibleDiv.className = 'invisible-div';
+                        invisibleDiv.textContent = node.nodeValue.trim();
+                        node.parentNode.insertBefore(invisibleDiv, node.nextSibling);
+
+                        // Flag to track whether the div has been hovered over
+                        let hovered = false;
+
+                        // Add event listener to the invisible div for hover
+                        invisibleDiv.addEventListener('mouseover', function (event) {
+                            hovered = true;
+                            const content = node.nodeValue.trim();
+                            const rect = invisibleDiv.getBoundingClientRect();
+                            const posX = rect.left + window.scrollX;
+                            const posY = rect.top + window.scrollY;
+                            if (clicked) { // Show popup only if div is also clicked
+                                showPopup(content, posX, posY);
+                            }
+                        });
+
+                        // Flag to track whether the div has been clicked
+                        let clicked = false;
+
+                        // Add event listener to the invisible div for click
+                        invisibleDiv.addEventListener('click', function (event) {
+                            event.stopPropagation(); // Prevent cell click event from firing
+                            clicked = true;
+                            const content = node.nodeValue.trim();
+                            const rect = invisibleDiv.getBoundingClientRect();
+                            const posX = rect.left + window.scrollX;
+                            const posY = rect.top + window.scrollY;
+                            if (hovered) { // Show popup only if div is also hovered over
+                                showPopup(content, posX, posY);
+                            }
+                        });
+
+                        // Add event listener to the popup to prevent it from disappearing when mouse is within it
+                        document.addEventListener('mouseover', function (event) {
+                            if (event.target.classList.contains('popup')) {
+                                hovered = true;
+                                clearTimeout(popupTimeout); // Clear any existing timeout
+                            }
+                        });
+
+                        // Add event listener to hide the popup when mouse leaves the cell
+                        cell.addEventListener('mouseout', function () {
+                            clearTimeout(popupTimeout); // Clear any existing timeout
+                            popupTimeout = setTimeout(hidePopup, 200);
+                            hovered = false;
+                        });
+                    }
+                });
+            });
+        }
+
+        function handleCellClick(cell) {
+            console.log("handleCellClick")
+            const content = cell.textContent.trim();
+            // Get the position of the clicked cell
+            const rect = cell.getBoundingClientRect();
+            const posX = rect.left + window.scrollX;
+            const posY = rect.top + window.scrollY;
+
+            // Show the popup with the cell content
+            showPopup(content, posX, posY);
+        }
+
+        // Function to refresh the table with data fetched from the server
+        function refreshTable() {
+            document.querySelector('.tableprop').scrollIntoView({ behavior: 'smooth' });
+            console.log("refreshTable")
+            var tableBody = document.getElementById("tableBody");
+
+            tableBody.innerHTML = '';
+
+            global_tabledata.forEach((row, index) => {
+                var newRow = document.createElement('tr');
+                newRow.innerHTML = `
+                <td>${index + 1}</td>
+                <td>${row[0]}</td>
+                <td>${row[2]}</td>
+                <td>${row[3]}</td>
+                <td>${row[4]}</td>
+                <td class="endpoint-url" style="display:${showColumn ? 'table-cell' : 'none'}">${row[1]}</td>
+                <td class="other-header" style="display:${showColumn ? 'table-cell' : 'none'}">${row[5]}</td>
+                <td class="total-tokens-header" style="display:${showColumn ? 'table-cell' : 'none'}">${row[6]}</td>
+                <td class="cost-header" style="display:${showColumn ? 'table-cell' : 'none'}">${row[7]}</td>
+                <td class="raw-header" style="display:${showColumn ? 'table-cell' : 'none'}">${row[8]}</td>
+            `;
+                tableBody.appendChild(newRow);
+            });
+            attachCellEventListeners();
+        }
+
+    </script>
+</body>
+
+</html>
